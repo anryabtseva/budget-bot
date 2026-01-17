@@ -1,47 +1,26 @@
 import os
-import json
-import gspread
-from datetime import datetime
-from oauth2client.service_account import ServiceAccountCredentials
 from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-# ===== Google Sheets =====
-SCOPE = [
-    "https://spreadsheets.google.com/feeds",
-    "https://www.googleapis.com/auth/drive"
-]
+# 1. Берём токен из переменных окружения Render
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS"])
-creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, SCOPE)
-client = gspread.authorize(creds)
+# 2. Команда /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Привет 👋\n"
+        "Я бот для ведения бюджета.\n\n"
+        "Пока я умею:\n"
+        "— отвечать на /start\n\n"
+        "Скоро добавим расходы, доходы и отчёты 💰"
+    )
 
-SHEET_NAME = "Семейный бюджет"
-sheet = client.open(SHEET_NAME).worksheet("Operations")
+# 3. Запуск бота
+def main():
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.run_polling()
 
-# ===== Telegram handler =====
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    user = update.message.from_user.first_name
-    user_id = update.message.from_user.id
-    date = datetime.now().strftime("%d.%m.%Y")
-
-    row = [
-        date,      # Date
-        user,      # User
-        user_id,   # User_ID
-        "Expense", # Type (пока фикс)
-        "",        # Category
-        "",        # Amount
-        "",        # Budget
-        "",        # Goal
-        text       # Comment
-    ]
-
-    sheet.append_row(row)
-    await update.message.reply_text("Записала 👍")
-
-# ===== Start bot =====
-app = ApplicationBuilder().token(os.environ["BOT_TOKEN"]).build()
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-app.run_polling()
+# 4. Точка входа
+if name == "__main__":
+    main()
