@@ -22,5 +22,5 @@ def main():
     app.run_polling()
 
 # 4. Точка входа
-if name == "__main__":
+if __name__ == "__main__":
     main()
